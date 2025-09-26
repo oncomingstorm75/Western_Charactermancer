@@ -36,8 +36,7 @@ function nextStep(step) {
     document.getElementById(`step${step}`).classList.remove('hidden'); 
     if (step === 6) calculateAndDisplaySkillPoints(); 
     if (step === 7) { 
-        populateHindSelect(); 
-        populateTalSelect(); 
+        populateAllTalentsAndHindrances(); 
         const arch = ARCHETYPES[document.getElementById('archetype-select').value]; 
         document.getElementById('arch-talent').textContent = arch.talent; 
     } 
@@ -523,8 +522,31 @@ function updateSelectedTalents() {
     }
     if (!displayText) displayText = 'None';
     
-    document.getElementById('selected-items').textContent = displayText;
+    // Fix: Update the correct element IDs
+    document.getElementById('selected-tals').textContent = displayText;
     document.getElementById('talent-points').textContent = talentPoints - talentCosts;
+}
+
+// Missing functions that you need to add:
+function toggleDescription(headerEl) {
+    const parentItem = headerEl.parentElement;
+    const description = parentItem.querySelector('.talent-description, .hindrance-description');
+    if (description) {
+        description.classList.toggle('hidden');
+    }
+}
+
+function rollNaturalTalent() {
+    const allTalents = Object.entries(TALENTS);
+    let rolledTalent = null;
+    while (!rolledTalent) {
+        const [name, data] = allTalents[Math.floor(Math.random() * allTalents.length)];
+        if (data.value >= 1 && data.value <= 3) {
+            rolledTalent = { name, value: data.value, desc: data.desc };
+        }
+    }
+    character.naturalTalent = rolledTalent;
+    document.getElementById('natural-talent').textContent = `${rolledTalent.name} (Value: ${rolledTalent.value})`;
 }
 
 function completeHT() { 
@@ -541,6 +563,8 @@ function completeBackstory() {
 }
 
 function generateAndDownloadJSON() {
+    const jsonData = generateJsonData();
+    const function generateAndDownloadJSON() {
     const jsonData = generateJsonData();
     const jsonString = JSON.stringify(jsonData, null, 2);
     navigator.clipboard.writeText(jsonString).then(() => {
@@ -795,6 +819,7 @@ function generateJsonData() {
             });
         });
     }
+    
     // Build bio content
     let bioContent = `Name: ${character.name || 'Unnamed Character'}\n`;
     bioContent += `Archetype: ${document.getElementById('archetype-select').value || 'Unknown'}\n`;
@@ -849,4 +874,3 @@ function generateJsonData() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
