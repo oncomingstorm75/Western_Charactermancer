@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Western RPG Charactermancer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Creepster&family=Rye&family=Merriweather:wght@400;700&display=swap');
+        :root { --primary-bg: linear-gradient(135deg, #2c1a0e 0%, #4c301c 50%, #6e482a 100%); --section-bg: rgba(44, 26, 14, 0.7); --border-color: #5a3d2e; --accent-gold: #c98e2a; --text-light: #d8c29e; --text-dark: #4c301c; --bg-light: #f5f5dc; --glow-yellow: #ffeb3b; --glow-orange: #ff9800; --shadow-dark: rgba(0, 0, 0, 0.5); --shadow-gold: rgba(201, 142, 42, 0.5); --error-red: #e53e3e; }
+        body { font-family: 'Cinzel', serif; background: var(--primary-bg); margin: 0; padding: 20px; min-height: 100vh; position: relative; overflow-x: hidden; color: var(--text-light); }
+        h1 { text-align: center; color: var(--accent-gold); text-shadow: 0 0 5px var(--glow-yellow), 0 0 10px var(--glow-orange); font-size: clamp(2em, 5vw, 3em); font-family: 'Creepster', cursive; margin-bottom: 10px; animation: glow 2s infinite alternate; }
+        @keyframes glow { from { text-shadow: 0 0 5px var(--accent-gold), 0 0 10px var(--accent-gold); } to { text-shadow: 0 0 10px var(--glow-yellow), 0 0 20px var(--glow-orange); } }
+        .subtitle { text-align: center; color: #F4A460; margin-bottom: 20px; font-style: italic; }
+        section { background: var(--section-bg); border: 2px solid var(--border-color); border-radius: 10px; padding: 20px; margin: 20px auto; max-width: 800px; box-shadow: inset 0 0 15px var(--shadow-dark), 0 0 10px var(--shadow-gold); position: relative; }
+        h2 { color: var(--text-light); text-align: center; text-shadow: 1px 1px 2px #000; border-bottom: 2px dashed var(--accent-gold); padding-bottom: 10px; font-size: 2em; margin-top: 0; }
+        h3 { color: var(--text-light); border-bottom: 1px dashed var(--accent-gold); padding-bottom: 5px; }
+        select, input, textarea, button { background: var(--bg-light); border: 1px solid #4c301c; border-radius: 5px; padding: 8px; margin: 5px; font-family: inherit; color: var(--text-dark); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: all 0.3s ease; }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 5px var(--shadow-gold); }
+        input.specialty-input { padding: 4px; margin-left: 5px; width: 100px; }
+        textarea { resize: vertical; min-height: 60px; width: 100%; }
+        button { background: linear-gradient(var(--accent-gold), #a3721e); color: var(--text-dark); cursor: pointer; font-weight: bold; text-transform: uppercase; border: none; }
+        button:hover:not(:disabled) { background: linear-gradient(var(--glow-yellow), var(--accent-gold)); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .hidden { display: none; }
+        .roll-display { color: var(--glow-yellow); font-weight: bold; text-shadow: 1px 1px 2px #000; }
+        .char-input-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .char-input-group label { flex: 1; font-weight: bold; }
+        .char-input-group input { flex: 2; }
+        .skill-category h3 { margin-top: 20px; font-family: 'Rye', cursive; font-size: 1.5em; }
+        .skill-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+        .skill-item { border: 1px solid var(--border-color); padding: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 5px; position: relative; }
+        .skill-item-title { font-weight: bold; color: #f5e7c8; font-size: 0.9em; display: flex; align-items: center; }
+        .skill-input-container { display: flex; align-items: center; gap: 5px; font-size: 0.8em; margin-top: 5px; }
+        .skill-labels { margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; }
+        .skill-label { font-size: 0.7em; padding: 2px 6px; border-radius: 8px; font-family: 'Merriweather', sans-serif; font-style: normal; font-weight: bold; color: var(--bg-light); }
+        .occupation-label { background-color: #9d5d5d; }
+        .archetype-label { background-color: #5d9d7b; }
+        .skill-input { width: 50px; }
+        .talent-grid, .hindrance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 10px; }
+        .talent-item, .hindrance-item { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; border: 1px solid var(--border-color); }
+        .talent-item:hover, .hindrance-item:hover { background: rgba(0,0,0,0.4); border-color: var(--accent-gold); }
+        .talent-header, .hindrance-header { display: flex; align-items: center; width: 100%; cursor: pointer; }
+        .talent-header input, .hindrance-header input { margin-right: 10px; cursor: pointer; }
+        .talent-name, .hindrance-name { font-weight: bold; color: #f5e7c8; transition: color 0.2s; pointer-events: none; }
+        .talent-description, .hindrance-description { font-size: 0.9em; color: var(--text-light); margin-top: 5px; padding-left: 10px; border-left: 2px solid var(--accent-gold); width: 100%; box-sizing: border-box; }
+        .points-summary { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 15px; }
+        .points-summary p { margin: 0; font-weight: bold; }
+        .points-summary .overspent { color: var(--error-red); text-shadow: 0 0 3px var(--error-red); }
+        label { display: block; margin-bottom: 5px; }
+        input[type="number"] { width: 60px; }
+        ul { list-style-type: none; padding: 0; }
+        ul li { margin-bottom: 5px; }
+        #archetype-info, #occupation-info { background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; margin-top: 20px; }
+        #archetype-info h4, #occupation-info h4 { color: var(--accent-gold); margin-top: 0; margin-bottom: 5px; }
+        #archetype-info ul, #occupation-info ul { padding-left: 15px; list-style-type: disc; }
+        #archetype-info p, #occupation-info p { margin-top: 0; }
+        #occ-skill-choice-container { margin-bottom: 15px; padding: 10px; border: 1px dashed var(--accent-gold); border-radius: 5px; }
+        #occ-skill-choice-container h4 { margin-top: 0; margin-bottom: 10px; }
+        @media (max-width: 600px) { body { padding: 10px; } section { padding: 15px; } .skill-grid { grid-template-columns: 1fr; } .talent-grid, .hindrance-grid { grid-template-columns: 1fr; } .char-input-group { flex-direction: column; align-items: flex-start; } .points-summary { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Western RPG Charactermancer</h1>
+    <p class="subtitle">Made for Rollingdeadly's The Quick and the Dead</p>
+    
+    <section id="step1">
+        <h2>Step 1: Choose your Western Archetype</h2>
+        <select id="archetype-select" aria-label="Select your character's archetype" onchange="displayArchetypeInfo()">
+            <option value="">Select an Archetype...</option>
+        </select>
+        <div id="archetype-info" class="hidden"></div>
+        <button onclick="selectArchetype()">Saddle Up - Next</button>
+    </section>
+
+    <section id="step2" class="hidden">
+        <h2>Step 2: Choose your Occupation</h2>
+        <select id="occupation-select" aria-label="Choose an occupation" onchange="displayOccupationInfo()">
+            <option value="">Select an Occupation...</option>
+        </select>
+        <div id="occupation-info" class="hidden"></div>
+        <button onclick="selectOccupation()">Next</button>
+        <button onclick="prevStep(1)">Back</button>
+    </section>
+
+    <section id="step3" class="hidden">
+        <h2>Step 3: Generate Characteristics</h2>
+        <p>Core Characteristic: <select id="core-char-select" aria-label="Select core characteristic" onchange="updateCharacteristicInputs()"></select></p>
+        <p class="roll-display">Core Roll: <span id="core-roll-display">Not rolled yet</span></p>
+        <button onclick="rollCore()">Roll Core</button>
+        <p>Total points: 460 + Core. Allocate to: STR, CON, DEX, POW, APP, EDU, INT, SIZ (Min 15, Max 130)</p>
+        <div id="char-alloc"></div>
+        <p>Remaining Points: <span id="remaining-points">460</span></p>
+        <button onclick="completeChars()">Next</button>
+        <button onclick="prevStep(2)">Back</button>
+    </section>
+
+    <section id="step4" class="hidden">
+        <h2>Step 4: Choose Age & Apply Modifiers</h2>
+        <select id="age-select" onchange="toggleDeduct()" aria-label="Select age">
+            <option value="18-21">18-21: Deduct 5 total among STR, SIZ, and EDU. Max Luck 90.</option>
+            <option value="22-39">22-39: +10 EDU</option>
+            <option value="40-49">40-49: +20 EDU, -10 APP, -10 total from STR, CON, or DEX</option>
+            <option value="50-59">50-59: +30 EDU, -15 APP, -15 total from STR, CON, or DEX</option>
+            <option value="60-69">60-69: +40 EDU, -20 APP, -20 total from STR, CON, or DEX</option>
+        </select>
+        <div id="age-deduct" class="hidden">
+            <p>Distribute total deduction across STR, CON, DEX:</p>
+            <label>STR: <input id="deduct-str" type="number" min="0" value="0" onchange="validateAgeDeduct()"></label>
+            <label>CON: <input id="deduct-con" type="number" min="0" value="0" onchange="validateAgeDeduct()"></label>
+            <label>DEX: <input id="deduct-dex" type="number" min="0" value="0" onchange="validateAgeDeduct()"></label>
+            <p>Total Deducted: <span id="total-deduct">0</span>/<span id="required-deduct">0</span></p>
+        </div>
+        <div id="age-18-21-deduct" class="hidden">
+            <p>Distribute 5 points to deduct from STR, SIZ, EDU:</p>
+            <label>STR: <input id="deduct-str-18-21" type="number" min="0" max="5" value="0" onchange="validateAgeDeduct()"></label>
+            <label>SIZ: <input id="deduct-siz-18-21" type="number" min="0" max="5" value="0" onchange="validateAgeDeduct()"></label>
+            <label>EDU: <input id="deduct-edu-18-21" type="number" min="0" max="5" value="0" onchange="validateAgeDeduct()"></label>
+            <p>Total Deducted: <span id="total-deduct-18-21">0</span>/5</p>
+        </div>
+        <button onclick="applyAge()">Apply & Next</button>
+        <button onclick="prevStep(3)">Back</button>
+    </section>
+
+    <section id="step5" class="hidden">
+        <h2>Step 5: Determine Secondary Attributes</h2>
+        <button onclick="rollLuck()">Roll Luck</button>
+        <p class="roll-display">Luck: <span id="luck-display">Not rolled yet</span></p>
+        <button onclick="calcSecondaries()">Calculate All</button>
+        <div id="secondary-display"></div>
+        <button onclick="nextStep(6)">Next</button>
+        <button onclick="prevStep(4)">Back</button>
+    </section>
+
+    <section id="step6" class="hidden">
+        <h2>Step 6: Skill Points</h2>
+        <p>Allocate your skill points. Points are spent from pools in this order: Archetype > Occupation > Personal.</p>
+        <div class="points-summary">
+            <p>Archetype Points: <span id="arch-rem">100</span> / 100</p>
+            <p>Occupation Points: <span id="occ-rem">0</span> / <span id="occ-total">0</span></p>
+            <p>Personal Points: <span id="pers-rem">0</span> / <span id="pers-total">0</span></p>
+        </div>
+        <hr>
+        <div id="skill-alloc"></div>
+        <button id="complete-skills-btn" onclick="completeSkills()">Next</button>
+        <button onclick="prevStep(5)">Back</button>
+    </section>
+
+    <section id="step7" class="hidden">
+        <h2>Step 7: Determine Talents & Hindrances</h2>
+        <button onclick="rollNaturalTalent()">Roll Natural Talent</button>
+        <p class="roll-display">Natural Talent: <span id="natural-talent">Not rolled yet</span></p>
+        <p><strong>Archetype Talent:</strong> <span id="arch-talent"></span></p>
+        
+        <h3>All Talents & Hindrances</h3>
+        <p><em>Hindrances (negative traits) give you talent points to spend on positive talents. All selections go in the same Talents section in Roll20.</em></p>
+        <div id="talent-checkboxes" class="talent-grid"></div>
+        <p>Selected: <span id="selected-items">None</span> | Available Talent Points: <span id="talent-points">0</span></p>
+        <button onclick="completeHT()">Next</button>
+        <button onclick="prevStep(6)">Back</button>
+    </section>
+
+    <section id="step8" class="hidden">
+        <h2>Step 8: Create Backstory</h2>
+        <label for="name">Name: <input id="name" type="text"></label>
+        <label for="gender">Gender: <input id="gender" type="text"></label>
+        <label for="description">Personal Description: <textarea id="description"></textarea></label>
+        <label for="heritage">Heritage:
+            <select id="heritage">
+                <option value="a">a. African American</option>
+                <option value="b">b. Far East (Chinese, Japanese, etc.)</option>
+                <option value="c">c. European (Irish American, Italian, German...)</option>
+                <option value="d">d. Southern (Mexican, Cuban, etc.)</option>
+                <option value="e">e. Mysterious (There's something odd about you...)</option>
+            </select>
+        </label>
+        <label for="ideology">Ideology/Beliefs: <input id="ideology" type="text"></label>
+        <label for="significant-people">Significant People: <input id="significant-people" type="text"></label>
+        <label for="meaningful">Meaningful Location/Possessions: <input id="meaningful" type="text"></label>
+        <label for="traits">Traits: <input id="traits" type="text"></label>
+        <label for="madness">Bout of Madness: <textarea id="madness"></textarea></label>
+        <label for="hair-eye">Hair/Eye Color: <input id="hair-eye" type="text"></label>
+        <label for="marks">Distinguishing Marks: <input id="marks" type="text"></label>
+        <button onclick="completeBackstory()">Next</button>
+        <button onclick="prevStep(7)">Back</button>
+    </section>
+
+    <section id="step9" class="hidden">
+        <h2>Step 9: Finalize Character</h2>
+        <button onclick="generateAndDownloadJSON()">Download/Copy JSON</button>
+        <button onclick="prevStep(8)">Back</button>
+    </section>
+
+    <script src="data.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
