@@ -445,60 +445,86 @@ function completeSkills() {
     nextStep(7); 
 }
 
-function populateHindSelect() {
-    const div = document.getElementById('hindrance-checkboxes');
-    div.innerHTML = Object.entries(HINDRANCES).map(([key, data]) =>
-        `<div class="hindrance-item"><div class="hindrance-header" onclick="toggleDescription(this)"><input type="checkbox" value="${key}" onclick="event.stopPropagation(); updateSelectedHindrances()"><span class="hindrance-name">${key}</span></div><div class="hindrance-description hidden">${data.desc}</div></div>`
-    ).join('');
-}
-
-function populateTalSelect() {
+function populateAllTalentsAndHindrances() {
     const div = document.getElementById('talent-checkboxes');
-    div.innerHTML = Object.entries(TALENTS).map(([key, data]) =>
-        `<div class="talent-item"><div class="talent-header" onclick="toggleDescription(this)"><input type="checkbox" value="${key}" onclick="event.stopPropagation(); updateSelectedTalents()"><span class="talent-name">${key}</span></div><div class="talent-description hidden">${data.desc}</div></div>`
-    ).join('');
-}
-
-function toggleDescription(headerEl) {
-    const parentItem = headerEl.parentElement;
-    const description = parentItem.querySelector('.hindrance-description, .talent-description');
-    if (description) {
-        description.classList.toggle('hidden');
-    }
-}
-
-function updateSelectedHindrances() {
-    const checked = [...document.querySelectorAll('#hindrance-checkboxes input:checked')];
-    character.hindrances = checked.map(cb => ({
-        name: cb.value,
-        value: HINDRANCES[cb.value].value,
-        desc: HINDRANCES[cb.value].desc
-    }));
-    document.getElementById('selected-hinds').textContent = character.hindrances.map(h => h.name.split(' (')[0]).join(', ') || 'None';
-    document.getElementById('talent-points').textContent = character.hindrances.reduce((sum, h) => sum + h.value, 0);
+    let html = '';
+    
+    // Add all hindrances (negative point values)
+    Object.entries(HINDRANCES).forEach(([key, data]) => {
+        html += `<div class="talent-item hindrance-item">
+            <div class="talent-header" onclick="toggleDescription(this)">
+                <input type="checkbox" value="${key}" data-points="${data.value}" data-type="hindrance" onclick="event.stopPropagation(); updateSelectedTalents()">
+                <span class="talent-name" style="color: #ff9999;">${key} [Hindrance: +${data.value} pts]</span>
+            </div>
+            <div class="talent-description hidden">${data.desc}</div>
+        </div>`;
+    });
+    
+    // Add all talents (positive point costs)
+    Object.entries(TALENTS).forEach(([key, data]) => {
+        html += `<div class="talent-item">
+            <div class="talent-header" onclick="toggleDescription(this)">
+                <input type="checkbox" value="${key}" data-points="${data.value}" data-type="talent" onclick="event.stopPropagation(); updateSelectedTalents()">
+                <span class="talent-name" style="color: #99ff99;">${key} [Cost: ${data.value} pts]</span>
+            </div>
+            <div class="talent-description hidden">${data.desc}</div>
+        </div>`;
+    });
+    
+    div.innerHTML = html;
 }
 
 function updateSelectedTalents() {
     const checked = [...document.querySelectorAll('#talent-checkboxes input:checked')];
-    character.talents = checked.map(cb => ({
-        name: cb.value,
-        value: TALENTS[cb.value].value,
-        desc: TALENTS[cb.value].desc
-    }));
-    document.getElementById('selected-tals').textContent = character.talents.map(t => t.name.split(' (')[0]).join(', ') || 'None';
-}
-
-function rollNaturalTalent() {
-    const allTalents = Object.entries(TALENTS);
-    let rolledTalent = null;
-    while (!rolledTalent) {
-        const [name, data] = allTalents[Math.floor(Math.random() * allTalents.length)];
-        if (data.value >= 1 && data.value <= 3) {
-            rolledTalent = { name, value: data.value, desc: data.desc };
+    
+    // Calculate talent points from hindrances
+    let talentPoints = 0;
+    let talentCosts = 0;
+    const selectedItems = [];
+    
+    checked.forEach(cb => {
+        const points = parseInt(cb.dataset.points);
+        const type = cb.dataset.type;
+        const name = cb.value;
+        
+        if (type === 'hindrance') {
+            const hindranceData = HINDRANCES[name];
+            talentPoints += points;
+            selectedItems.push({
+                name: name,
+                value: points,
+                desc: hindranceData.desc,
+                type: 'hindrance'
+            });
+        } else {
+            const talentData = TALENTS[name];
+            talentCosts += points;
+            selectedItems.push({
+                name: name,
+                value: points,
+                desc: talentData.desc,
+                type: 'talent'
+            });
         }
+    });
+    
+    // Store all selected items (both talents and hindrances) together
+    character.talents = selectedItems.filter(item => item.type === 'talent');
+    character.hindrances = selectedItems.filter(item => item.type === 'hindrance');
+    
+    // Update display
+    let displayText = '';
+    if (character.hindrances.length > 0) {
+        displayText += 'Hindrances: ' + character.hindrances.map(h => h.name.split(' (')[0]).join(', ');
     }
-    character.naturalTalent = rolledTalent;
-    document.getElementById('natural-talent').textContent = `${rolledTalent.name} (Value: ${rolledTalent.value})`;
+    if (character.talents.length > 0) {
+        if (displayText) displayText += ' | ';
+        displayText += 'Talents: ' + character.talents.map(t => t.name.split(' (')[0]).join(', ');
+    }
+    if (!displayText) displayText = 'None';
+    
+    document.getElementById('selected-items').textContent = displayText;
+    document.getElementById('talent-points').textContent = talentPoints - talentCosts;
 }
 
 function completeHT() { 
@@ -735,7 +761,7 @@ function generateJsonData() {
         }
     });
 
-    // Build talents section
+    // Build talents section - combine both talents and hindrances as talents for Roll20
     if (character.archetype && character.archetype.talent) {
         data.repeating_talents.push({
             talent_name: `${character.archetype.talent} (Archetype)`,
@@ -750,6 +776,7 @@ function generateJsonData() {
         });
     }
     
+    // Add regular talents
     if (character.talents && Array.isArray(character.talents)) {
         character.talents.forEach(talent => {
             data.repeating_talents.push({
@@ -759,6 +786,15 @@ function generateJsonData() {
         });
     }
 
+    // Add hindrances as talents (they're mechanically the same in Roll20)
+    if (character.hindrances && Array.isArray(character.hindrances)) {
+        character.hindrances.forEach(hindrance => {
+            data.repeating_talents.push({
+                talent_name: `${hindrance.name} (Hindrance)`,
+                talent_description: hindrance.desc || ''
+            });
+        });
+    }
     // Build bio content
     let bioContent = `Name: ${character.name || 'Unnamed Character'}\n`;
     bioContent += `Archetype: ${document.getElementById('archetype-select').value || 'Unknown'}\n`;
@@ -813,3 +849,4 @@ function generateJsonData() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
