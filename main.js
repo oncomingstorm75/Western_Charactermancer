@@ -564,8 +564,6 @@ function completeBackstory() {
 
 function generateAndDownloadJSON() {
     const jsonData = generateJsonData();
-    const function generateAndDownloadJSON() {
-    const jsonData = generateJsonData();
     const jsonString = JSON.stringify(jsonData, null, 2);
     navigator.clipboard.writeText(jsonString).then(() => {
         alert("Character JSON copied to clipboard. Now go to your 'Importer' character in Roll20 and paste this into its bio field.");
@@ -874,3 +872,4 @@ function generateJsonData() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
